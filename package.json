@@ -1,0 +1,13 @@
+{
+  "name": "smart-shift",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Self-hosted shift scheduling app with server-side persistence and multi-device sync",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "express": "^4.19.2"
+  }
+}
