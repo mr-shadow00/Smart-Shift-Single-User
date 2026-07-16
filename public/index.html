@@ -1,0 +1,1246 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Shifts</title>
+<link rel="icon" type="image/png" href="/icon.png">
+<link rel="apple-touch-icon" href="/icon.png">
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+
+:root{
+  --bg:#f0f2f7;
+  --surface:#ffffff;
+  --surface2:#f0f2f5;
+  --surface3:#e2e5ec;
+  --text:#0f1117;
+  --text2:#4a5568;
+  --text3:#8896a7;
+  --accent:#6366f1;
+  --accent2:#eef2ff;
+  --accent-text:#4338ca;
+  --today:#6366f1;
+  --green:#10b981;
+  --red:#ef4444;
+  --red-bg:#fef2f2;
+  --border:rgba(0,0,0,0.08);
+  --border-solid:#e2e5ec;
+  --modal-bg:rgba(15,17,23,0.5);
+  --shadow:0 4px 24px rgba(0,0,0,0.07);
+  --shadow-sm:0 1px 3px rgba(0,0,0,0.06);
+  --r:14px;--r-sm:10px;--r-lg:22px;
+  --tab-h:64px;--safe-b:env(safe-area-inset-bottom,0px);
+  --cal-other:#e8eaf0;
+  --cal-other-text:#b0b8c8;
+  --glass:rgba(255,255,255,0.55);
+  --glass-strong:rgba(255,255,255,0.7);
+  --glass-border:rgba(255,255,255,0.6);
+  --glass-shadow:0 8px 32px rgba(31,41,82,0.12);
+  --mesh1:rgba(99,102,241,.22);
+  --mesh2:rgba(244,114,182,.16);
+  --mesh3:rgba(16,185,129,.14);
+}
+
+@media(prefers-color-scheme:dark){
+  :root{
+    --bg:#12151f;
+    --surface:#1c2235;
+    --surface2:#242b40;
+    --surface3:#2d3650;
+    --text:#eef0f6;
+    --text2:#8b95b0;
+    --text3:#586077;
+    --accent:#818cf8;
+    --accent2:#1e1b4b;
+    --accent-text:#c7d2fe;
+    --today:#6366f1;
+    --green:#10b981;
+    --red:#f87171;
+    --red-bg:#2d1a22;
+    --border:rgba(255,255,255,0.07);
+    --border-solid:#2d3650;
+    --modal-bg:rgba(0,0,0,0.65);
+    --shadow:0 8px 32px rgba(0,0,0,0.4);
+    --shadow-sm:0 1px 4px rgba(0,0,0,0.3);
+    --cal-other:#161924;
+    --cal-other-text:#3a4160;
+    --glass:rgba(28,34,53,0.55);
+    --glass-strong:rgba(28,34,53,0.75);
+    --glass-border:rgba(255,255,255,0.09);
+    --glass-shadow:0 8px 32px rgba(0,0,0,0.45);
+    --mesh1:rgba(99,102,241,.28);
+    --mesh2:rgba(236,72,153,.16);
+    --mesh3:rgba(16,185,129,.14);
+  }
+}
+
+body{
+  font-family:'Inter',-apple-system,BlinkMacSystemFont,sans-serif;font-size:14px;
+  color:var(--text);min-height:100vh;min-height:100dvh;-webkit-font-smoothing:antialiased;overscroll-behavior:none;
+  background:
+    radial-gradient(circle at 10% -10%, var(--mesh1), transparent 42%),
+    radial-gradient(circle at 100% 0%, var(--mesh2), transparent 45%),
+    radial-gradient(circle at 50% 100%, var(--mesh3), transparent 40%),
+    var(--bg);
+  background-attachment:fixed;
+}
+
+/* ── LAYOUT ── */
+.app{display:flex;flex-direction:column;min-height:100vh;min-height:100dvh}
+.topbar{
+  position:fixed;top:14px;left:50%;transform:translateX(-50%);
+  width:calc(100% - 24px);max-width:480px;height:54px;
+  padding:0 8px 0 18px;display:flex;align-items:center;
+  background:var(--glass);backdrop-filter:blur(22px) saturate(180%);-webkit-backdrop-filter:blur(22px) saturate(180%);
+  border:1px solid var(--glass-border);border-radius:999px;box-shadow:var(--glass-shadow);
+  z-index:50;transition:max-width .2s,height .2s;
+}
+.logo{display:flex;align-items:center;gap:8px;position:absolute;left:16px}
+.logo-mark{width:30px;height:30px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.logo-name{font-size:15px;font-weight:700;letter-spacing:-.4px}
+.main{flex:1;padding:88px 16px 0;padding-bottom:calc(var(--tab-h) + var(--safe-b) + 32px);max-width:860px;margin:0 auto;width:100%}
+.topbar-center{margin:0 auto;display:flex;align-items:center}
+
+/* ── SYNC STATUS ── */
+.sync-pill{position:absolute;right:6px;display:flex;align-items:center;gap:6px;padding:5px 10px;border-radius:20px;background:var(--surface2);border:1px solid var(--border-solid);font-size:11px;font-weight:600;color:var(--text3);transition:all .3s}
+.sync-dot{width:7px;height:7px;border-radius:50%;background:var(--text3);flex-shrink:0;transition:background .3s}
+.sync-pill.online .sync-dot{background:var(--green)}
+.sync-pill.online{color:var(--green)}
+.sync-pill.syncing .sync-dot{background:#f59e0b;animation:blink 1s infinite}
+.sync-pill.syncing{color:#f59e0b}
+.sync-pill.offline .sync-dot{background:var(--red)}
+.sync-pill.offline{color:var(--red)}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.3}}
+@media(max-width:400px){.sync-text{display:none}}
+@media(min-width:640px){.sync-pill{right:10px}}
+
+/* ── DESKTOP NAV ── */
+.desktop-nav{display:none;gap:2px;background:rgba(255,255,255,0.08);padding:4px;border-radius:999px}
+.d-nav-btn{padding:7px 15px;border:none;background:none;font-size:13px;font-weight:500;color:var(--text2);cursor:pointer;border-radius:999px;font-family:inherit;transition:all .15s;white-space:nowrap;display:flex;align-items:center;gap:7px}
+.d-nav-btn.active{background:var(--surface);color:var(--text);box-shadow:var(--shadow-sm);font-weight:600}
+.d-nav-btn.active .ni{stroke:var(--accent)}
+.d-nav-btn:hover:not(.active){color:var(--text);background:rgba(255,255,255,0.08)}
+.ni{width:16px;height:16px;stroke:var(--text2);stroke-width:2;stroke-linecap:round;stroke-linejoin:round;fill:none;transition:stroke .15s;flex-shrink:0}
+
+/* ── BOTTOM NAV ── */
+.bottom-nav{
+  position:fixed;bottom:calc(14px + var(--safe-b));left:50%;transform:translateX(-50%);
+  width:calc(100% - 28px);max-width:380px;height:62px;
+  background:var(--glass);backdrop-filter:blur(22px) saturate(180%);-webkit-backdrop-filter:blur(22px) saturate(180%);
+  border:1px solid var(--glass-border);border-radius:999px;box-shadow:var(--glass-shadow);
+  display:flex;align-items:center;padding:0 6px;z-index:50;
+}
+.b-nav-btn{flex:1;height:100%;display:flex;flex-direction:column;justify-content:center;align-items:center;gap:3px;border:none;background:none;cursor:pointer;font-family:inherit;border-radius:999px;transition:background .15s}
+.b-nav-btn .ni{width:20px;height:20px;stroke:var(--text3)}
+.b-nav-label{font-size:9.5px;font-weight:500;color:var(--text3);transition:color .15s}
+.b-nav-btn.active .ni{stroke:var(--accent)}
+.b-nav-btn.active .b-nav-label{color:var(--accent);font-weight:700}
+
+@media(min-width:640px){
+  .topbar{max-width:760px;padding:0 10px 0 24px;height:60px}
+  .logo{left:24px}
+  .main{padding:104px 28px 28px;max-width:1040px}
+  .bottom-nav{display:none!important}
+  .desktop-nav{display:flex!important}
+}
+
+/* ── PANELS ── */
+.panel{display:none}.panel.active{display:block}
+
+/* ── CALENDAR HEAD ── */
+.cal-head{display:flex;align-items:center;gap:8px;margin-bottom:16px}
+.cal-month{font-size:22px;font-weight:800;letter-spacing:-.6px;flex:1;line-height:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
+.cal-month span{color:var(--text3);font-weight:400;font-size:18px;margin-left:4px}
+.cal-head-controls{display:flex;align-items:center;gap:8px;flex-shrink:0}
+@media(max-width:639px){
+  .cal-head{flex-direction:column;align-items:stretch;gap:10px}
+  .cal-month{font-size:19px}
+  .cal-head-controls{flex-wrap:wrap}
+}
+.nav-pill{display:flex;gap:2px;background:var(--glass);backdrop-filter:blur(12px);border-radius:12px;padding:3px;border:1px solid var(--glass-border);box-shadow:var(--shadow-sm)}
+.nav-pill button{width:32px;height:32px;border:none;background:none;cursor:pointer;font-size:17px;color:var(--text2);border-radius:9px;display:flex;align-items:center;justify-content:center;transition:all .15s;font-family:inherit}
+.nav-pill button:hover{background:var(--surface);color:var(--text)}
+.today-pill{padding:0 14px;height:38px;border:none;background:var(--glass);backdrop-filter:blur(12px);border-radius:12px;cursor:pointer;font-size:13px;font-weight:700;color:var(--accent);font-family:inherit;transition:all .15s;border:1px solid rgba(99,102,241,.25);box-shadow:var(--shadow-sm);letter-spacing:-.1px}
+.today-pill:hover{background:var(--accent2);border-color:var(--accent)}
+
+/* View toggle (Month / Week) */
+.view-toggle{display:flex;gap:2px;background:var(--surface2);border-radius:10px;padding:3px;border:1px solid var(--border-solid)}
+.vt-btn{padding:5px 12px;border:none;background:none;font-size:12px;font-weight:600;color:var(--text3);cursor:pointer;border-radius:7px;font-family:inherit;transition:all .15s}
+.vt-btn.active{background:var(--surface);color:var(--accent);box-shadow:var(--shadow-sm)}
+
+/* ── CALENDAR WRAP ── */
+.cal-wrap{background:var(--border-solid);border-radius:var(--r-lg);overflow:hidden;box-shadow:var(--glass-shadow);border:1px solid var(--glass-border)}
+
+/* Day-of-week header */
+.dows{display:grid;grid-template-columns:repeat(7,1fr);background:var(--glass);backdrop-filter:blur(14px)}
+.dow{padding:11px 0;text-align:center;font-size:9.5px;font-weight:700;color:var(--text3);letter-spacing:.6px;text-transform:uppercase}
+
+/* Grid */
+.cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:1px;background:var(--border-solid)}
+
+/* ── MOBILE: square cells ── */
+.cal-cell{
+  aspect-ratio:1/1;
+  width:100%;
+  padding:4px;
+  border:none;
+  cursor:pointer;
+  position:relative;
+  transition:background .1s;
+  font-family:inherit;
+  color:var(--text);
+  overflow:hidden;
+  background:var(--surface);
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  gap:3px;
+}
+.cal-cell:hover{background:var(--surface2)}
+.cal-cell.other{background:var(--cal-other);cursor:default}
+.cal-cell.other:hover{background:var(--cal-other)}
+/* Selected date highlight */
+.cal-cell.sel{box-shadow:inset 0 0 0 2px var(--accent)}
+
+/* Date number bubble */
+.dn{font-size:15px;font-weight:700;width:30px;height:30px;display:flex;align-items:center;justify-content:center;border-radius:50%;color:var(--text);flex-shrink:0}
+.cal-cell.other .dn{color:var(--cal-other-text)}
+.cal-cell.today .dn{background:var(--today);color:#fff;font-weight:700;box-shadow:0 2px 8px rgba(99,102,241,.45)}
+
+/* Colour dots row (mobile) */
+.cell-dots{display:flex;gap:3px;justify-content:center;flex-wrap:wrap;max-width:100%;padding:0 2px}
+.cell-dot{width:6px;height:6px;border-radius:50%;flex-shrink:0}
+.cell-dot-more{font-size:8px;font-weight:700;color:var(--text3);line-height:6px}
+
+/* Note icon */
+.cell-note{position:absolute;top:1px;right:3px;width:8px;height:8px;opacity:.45}
+.cell-note svg{width:100%;height:100%;stroke:var(--text2);fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+
+/* Shift pills (desktop only) */
+.pills{display:none;flex-direction:column;gap:2px;width:100%;min-width:0}
+.pill{font-size:10px;font-weight:600;padding:2px 6px;border-radius:5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:#fff;line-height:1.4;max-width:100%}
+.pill-more{font-size:9px;font-weight:600;color:var(--text3);padding-left:2px;margin-top:1px}
+
+/* ── DESKTOP: tall cells, color dots pinned to bottom ── */
+@media(min-width:640px){
+  .cal-cell{aspect-ratio:unset;min-height:110px;padding:10px 10px 8px;align-items:center;justify-content:center;gap:6px}
+  .dn{font-size:18px;width:36px;height:36px;margin-bottom:0}
+  .pills{display:none}
+  .cell-dots{display:flex;position:absolute;left:0;right:0;bottom:10px;justify-content:center}
+  .cell-dot{width:8px;height:8px}
+  .cell-note{top:9px;right:9px;width:14px;height:14px}
+}
+
+/* ── WEEK VIEW ── */
+.week-wrap{background:var(--glass);border:1px solid var(--glass-border);border-radius:var(--r-lg);overflow:hidden;box-shadow:var(--glass-shadow)}
+.week-head{display:grid;grid-template-columns:repeat(7,1fr);background:var(--glass);backdrop-filter:blur(14px);border-bottom:1px solid var(--border-solid)}
+.week-day-head{padding:10px 4px;text-align:center;cursor:pointer;transition:background .1s}
+.week-day-head:hover{background:var(--surface2)}
+.wdh-name{font-size:9px;font-weight:700;color:var(--text3);letter-spacing:.6px;text-transform:uppercase;margin-bottom:4px}
+.wdh-num{width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700;color:var(--text2);margin:0 auto}
+.wdh-num.today{background:var(--today);color:#fff;box-shadow:0 2px 8px rgba(99,102,241,.45)}
+.week-body{padding:14px 12px;display:flex;flex-direction:column;gap:6px;min-height:120px}
+.week-empty{text-align:center;color:var(--text3);font-size:13px;padding:24px 0}
+.week-row{display:grid;grid-template-columns:repeat(7,1fr);gap:6px}
+.week-col{display:flex;flex-direction:column;gap:4px;min-height:30px}
+.week-pill{font-size:11px;font-weight:600;padding:4px 7px;border-radius:7px;color:#fff;line-height:1.4;cursor:pointer;transition:opacity .1s;word-break:break-word}
+.week-pill:hover{opacity:.85}
+.week-dot-row{display:flex;gap:3px;flex-wrap:wrap;justify-content:center;padding-top:2px}
+.week-dot{width:7px;height:7px;border-radius:50%}
+.week-day-head.sel{background:var(--accent2)}
+
+/* ── INLINE DAY PANEL (replaces popup) ── */
+.inline-panel{display:none;margin-top:18px;background:var(--glass-strong);backdrop-filter:blur(28px) saturate(180%);-webkit-backdrop-filter:blur(28px) saturate(180%);border:1px solid var(--glass-border);border-radius:var(--r-lg);overflow:hidden;box-shadow:var(--glass-shadow)}
+.inline-panel.open{display:block}
+.ip-head{padding:18px 22px 14px;display:flex;align-items:flex-start;justify-content:space-between;border-bottom:1px solid var(--border-solid)}
+.sh-day{font-size:11px;font-weight:700;color:var(--accent);text-transform:uppercase;letter-spacing:.6px;margin-bottom:3px}
+.sh-title{font-size:18px;font-weight:700;letter-spacing:-.3px}
+.x-btn{width:32px;height:32px;border-radius:50%;border:none;background:var(--surface2);cursor:pointer;font-size:18px;color:var(--text2);display:flex;align-items:center;justify-content:center;flex-shrink:0;font-family:inherit;border:1px solid var(--border-solid)}
+.x-btn:hover{color:var(--text);background:var(--surface3)}
+.ip-body{padding:18px 22px 26px}
+.divider{height:1px;background:var(--border-solid);margin:14px 0}
+.sub-title{font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.7px;margin-bottom:10px}
+.a-row{display:flex;align-items:flex-start;gap:10px;padding:10px 12px;background:var(--surface2);border-radius:10px;margin-bottom:7px;border:1px solid var(--border-solid)}
+.a-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0;margin-top:3px}
+.a-info{flex:1;min-width:0}
+.a-name{font-weight:600;font-size:14px}
+.a-meta{font-size:12px;color:var(--text2);margin-top:1px}
+.rm-btn{width:28px;height:28px;border-radius:7px;border:none;background:none;cursor:pointer;font-size:16px;color:var(--text3);display:flex;align-items:center;justify-content:center;font-family:inherit;transition:all .15s;flex-shrink:0}
+.rm-btn:hover{background:var(--red-bg);color:var(--red)}
+.no-shifts{text-align:center;color:var(--text3);font-size:13px;padding:14px 0}
+.daynote-wrap{margin-bottom:14px}
+.daynote-wrap textarea{width:100%;padding:10px 12px;border:1px solid var(--border-solid);border-radius:var(--r-sm);font-size:13px;background:var(--surface2);color:var(--text);outline:none;font-family:inherit;resize:none;min-height:54px;line-height:1.5;transition:border-color .15s;margin-bottom:10px}
+.daynote-wrap textarea:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(99,102,241,.12)}
+.daynote-wrap textarea::placeholder{color:var(--text3)}
+.a-note{font-size:12px;color:var(--text2);font-style:italic;margin-top:3px;line-height:1.4;word-break:break-word}
+.note-btn{width:28px;height:28px;border-radius:7px;border:none;background:none;cursor:pointer;color:var(--text3);display:flex;align-items:center;justify-content:center;font-family:inherit;transition:all .15s;flex-shrink:0}
+.note-btn svg{width:15px;height:15px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.note-btn:hover{background:var(--accent2);color:var(--accent)}
+.note-btn.has-note{color:var(--accent)}
+.field{margin-bottom:12px}
+.field label{display:block;font-size:11px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.4px;margin-bottom:6px}
+select{width:100%;padding:11px 36px 11px 13px;border:1px solid var(--border-solid);border-radius:var(--r-sm);font-size:14px;background:var(--surface2);color:var(--text);outline:none;font-family:inherit;appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='7' fill='none'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%23888' stroke-width='1.5' stroke-linecap='round'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 13px center}
+select:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(99,102,241,.15)}
+.add-btn{width:100%;padding:13px;border:none;border-radius:var(--r-sm);background:var(--accent);color:#fff;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit;margin-top:4px;letter-spacing:-.1px}
+.add-btn:hover{opacity:.9}
+.add-btn:active{opacity:.8;transform:scale(.99)}
+.setup-msg{text-align:center;padding:12px 0}
+.setup-msg p{color:var(--text2);font-size:13px;margin-bottom:14px}
+.goto-btn{padding:9px 18px;border:none;border-radius:var(--r-sm);background:var(--accent2);color:var(--accent-text);font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;border:1px solid rgba(99,102,241,.2)}
+
+/* ── FORMS ── */
+.page-title{font-size:21px;font-weight:700;letter-spacing:-.4px;margin-bottom:16px}
+.card{background:var(--glass);backdrop-filter:blur(16px) saturate(160%);-webkit-backdrop-filter:blur(16px) saturate(160%);border:1px solid var(--glass-border);border-radius:var(--r);padding:18px;margin-bottom:14px;box-shadow:var(--shadow-sm)}
+.card-label{font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.6px;margin-bottom:14px}
+.backup-hint{font-size:12px;color:var(--text2);line-height:1.5;margin-bottom:14px}
+.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+@media(min-width:500px){.form-grid{grid-template-columns:1fr 1fr 1fr}}
+.form-grid .span2{grid-column:span 2}
+@media(min-width:500px){.form-grid .span2{grid-column:span 1}}
+.f-field{display:flex;flex-direction:column;gap:5px}
+.f-field label{font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.4px}
+input{padding:10px 13px;border:1px solid var(--border-solid);border-radius:var(--r-sm);font-size:14px;background:var(--surface2);color:var(--text);outline:none;font-family:inherit;width:100%;transition:border-color .15s}
+input::placeholder{color:var(--text3)}
+input:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(99,102,241,.12)}
+input[type=color]{padding:4px;height:44px;cursor:pointer}
+input[type=time]{font-size:13px}
+.form-submit{width:100%;padding:12px;border:none;border-radius:var(--r-sm);background:var(--accent);color:#fff;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit;margin-top:6px;letter-spacing:-.1px;transition:opacity .15s}
+.form-submit:hover{opacity:.9}
+.off-check-row{flex-direction:row;align-items:center}
+.off-check-label{display:flex;align-items:center;gap:8px;font-size:13px;font-weight:600;color:var(--text2);cursor:pointer}
+.off-check-label input[type=checkbox]{width:16px;height:16px;flex-shrink:0;cursor:pointer;accent-color:var(--accent)}
+.off-badge{font-size:10px;font-weight:700;padding:2px 8px;border-radius:20px;background:var(--red-bg);color:var(--red);border:1px solid var(--red);letter-spacing:.3px;flex-shrink:0}
+
+/* ── ITEMS LIST ── */
+.items{display:flex;flex-direction:column;gap:8px}
+.item{display:flex;align-items:center;gap:12px;padding:13px 15px;background:var(--glass);backdrop-filter:blur(16px) saturate(160%);-webkit-backdrop-filter:blur(16px) saturate(160%);border:1px solid var(--glass-border);border-radius:var(--r-sm);box-shadow:var(--shadow-sm)}
+.i-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0}
+.i-info{flex:1;min-width:0}
+.i-name{font-weight:600;font-size:14px}
+.i-meta{font-size:12px;color:var(--text2);margin-top:2px}
+.del{padding:6px 12px;border:1px solid var(--border-solid);border-radius:7px;background:none;font-size:12px;font-weight:600;color:var(--text3);cursor:pointer;font-family:inherit;transition:all .15s;flex-shrink:0}
+.del:hover{color:var(--red);background:var(--red-bg);border-color:var(--red)}
+.empty-state{text-align:center;color:var(--text3);font-size:14px;padding:36px 0;line-height:1.6}
+
+/* ── SUMMARY ── */
+.stats{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-bottom:18px}
+@media(min-width:500px){.stats{grid-template-columns:repeat(4,1fr)}}
+.stat{background:var(--glass);backdrop-filter:blur(16px) saturate(160%);-webkit-backdrop-filter:blur(16px) saturate(160%);border:1px solid var(--glass-border);border-radius:var(--r);padding:15px;box-shadow:var(--shadow-sm)}
+.sv{font-size:26px;font-weight:700;letter-spacing:-.5px}
+.sl{font-size:12px;font-weight:500;color:var(--text2);margin-top:2px}
+
+/* ── CSV EXPORT ── */
+.export-btn{display:flex;align-items:center;gap:7px;padding:9px 16px;border:1px solid var(--border-solid);border-radius:10px;background:var(--glass);backdrop-filter:blur(12px);font-size:12px;font-weight:700;color:var(--text2);cursor:pointer;font-family:inherit;transition:all .15s;margin-bottom:16px;box-shadow:var(--shadow-sm)}
+.export-btn:hover{color:var(--accent);border-color:var(--accent);background:var(--accent2)}
+.export-btn svg{width:14px;height:14px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;flex-shrink:0}
+
+/* ── TOAST ── */
+.toast{position:fixed;bottom:calc(var(--tab-h) + var(--safe-b) + 16px);left:50%;transform:translateX(-50%) translateY(16px);background:var(--text);color:var(--bg);padding:9px 18px;border-radius:20px;font-size:13px;font-weight:600;opacity:0;transition:all .25s;pointer-events:none;white-space:nowrap;z-index:999}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+@media(min-width:640px){.toast{bottom:24px}}
+
+/* ── FIRST-RUN SETUP ── */
+.setup-overlay{position:fixed;inset:0;background:var(--modal-bg);backdrop-filter:blur(6px);display:flex;align-items:center;justify-content:center;z-index:1000;padding:20px}
+.setup-card{background:var(--surface);border-radius:var(--r-lg);padding:32px 26px;width:100%;max-width:360px;text-align:center;box-shadow:var(--shadow)}
+.setup-card h2{font-size:20px;font-weight:700;letter-spacing:-.3px;margin-bottom:4px}
+.setup-card p{font-size:13px;color:var(--text2)}
+.setup-card .f-field{text-align:left}
+
+/* ── NOTE PHOTO ── */
+.photo-btn{display:flex;align-items:center;justify-content:center;gap:7px;width:100%;padding:10px;border:1px dashed var(--border-solid);border-radius:var(--r-sm);background:none;color:var(--text2);font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;margin-bottom:10px;transition:all .15s}
+.photo-btn:hover{border-color:var(--accent);color:var(--accent);background:var(--accent2)}
+.photo-btn svg{width:15px;height:15px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;flex-shrink:0}
+.note-photos{display:grid;grid-template-columns:repeat(auto-fill,minmax(100px,1fr));gap:8px;margin-bottom:10px}
+.note-photo{cursor:pointer}
+.note-photo img{width:100%;height:100px;object-fit:cover;border-radius:var(--r-sm);display:block;border:1px solid var(--border-solid);transition:opacity .15s}
+.note-photo:hover img{opacity:.85}
+
+/* ── PHOTO LIGHTBOX ── */
+.photo-lightbox{position:fixed;inset:0;background:rgba(8,9,12,.94);backdrop-filter:blur(4px);z-index:1100;display:flex;flex-direction:column}
+.lightbox-topbar{display:flex;justify-content:flex-end;gap:10px;padding:calc(14px + env(safe-area-inset-top,0px)) 16px 14px}
+.lb-btn{width:40px;height:40px;border-radius:50%;border:none;background:rgba(255,255,255,.1);color:#fff;display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0;transition:background .15s}
+.lb-btn:hover{background:rgba(255,255,255,.2)}
+.lb-btn.lb-danger:hover{background:var(--red);color:#fff}
+.lb-btn svg{width:19px;height:19px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.lightbox-body{flex:1;display:flex;align-items:center;justify-content:center;padding:0 16px calc(16px + var(--safe-b));overflow:auto;min-height:0}
+.lightbox-body img{max-width:100%;max-height:100%;border-radius:10px;object-fit:contain;cursor:default}
+</style>
+</head>
+<body>
+<div class="app">
+
+<div class="topbar">
+  <div class="logo">
+    <div class="logo-mark">
+      <img src="/icon.png" alt="" width="32" height="32">
+    </div>
+    <span class="logo-name">Shifts</span>
+  </div>
+
+  <div class="topbar-center">
+    <nav class="desktop-nav">
+      <button class="d-nav-btn active" onclick="go('cal')">
+        <svg class="ni" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>Calendar
+      </button>
+      <button class="d-nav-btn" onclick="go('shifts')">
+        <svg class="ni" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>Shifts
+      </button>
+      <button class="d-nav-btn" onclick="go('summary')">
+        <svg class="ni" viewBox="0 0 24 24"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>Summary
+      </button>
+      <button class="d-nav-btn" onclick="go('profile')">
+        <svg class="ni" viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>Profile
+      </button>
+    </nav>
+  </div>
+
+  <div class="sync-pill" id="sync-pill">
+    <span class="sync-dot" id="sync-dot"></span>
+    <span class="sync-text" id="sync-text">Connecting…</span>
+  </div>
+</div>
+
+<div class="main">
+
+  <!-- CALENDAR -->
+  <div class="panel active" id="panel-cal">
+    <div class="cal-head">
+      <div class="cal-month" id="cal-month"></div>
+      <div class="cal-head-controls">
+        <div class="view-toggle">
+          <button class="vt-btn active" id="vt-month" onclick="setView('month')">Month</button>
+          <button class="vt-btn" id="vt-week" onclick="setView('week')">Week</button>
+        </div>
+        <button class="today-pill" onclick="goToday()">Today</button>
+        <div class="nav-pill">
+          <button onclick="mv(-1)">‹</button>
+          <button onclick="mv(1)">›</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- MONTH VIEW -->
+    <div id="view-month">
+      <div class="cal-wrap">
+        <div class="dows" id="dows"></div>
+        <div class="cal-grid" id="cal-grid"></div>
+      </div>
+    </div>
+
+    <!-- WEEK VIEW -->
+    <div id="view-week" style="display:none">
+      <div class="week-wrap">
+        <div class="week-head" id="week-head"></div>
+        <div class="week-body" id="week-body"></div>
+      </div>
+    </div>
+
+    <!-- INLINE DAY PANEL (appears below the calendar when a date is clicked) -->
+    <div class="inline-panel" id="inline-panel">
+      <div class="ip-head">
+        <div><div class="sh-day" id="sh-day"></div><div class="sh-title">Assignments</div></div>
+        <button class="x-btn" onclick="closePanel()">✕</button>
+      </div>
+      <div class="ip-body">
+        <div class="sub-title">On this day</div>
+        <div id="sh-list"></div>
+        <div class="divider"></div>
+        <div id="sh-add">
+          <div class="sub-title">Add shift</div>
+          <div class="field"><label>Shift type</label><select id="m-shift"></select></div>
+          <button class="add-btn" onclick="saveM()">+ Add shift</button>
+        </div>
+        <div id="sh-setup" style="display:none" class="setup-msg">
+          <p>Add a shift type first before assigning.</p>
+          <button class="goto-btn" onclick="closePanel();go('shifts')">Set up shifts →</button>
+        </div>
+        <div class="divider"></div>
+        <div class="sub-title">Note for this day</div>
+        <div class="daynote-wrap">
+          <textarea id="day-note" placeholder="Add a note for this day (e.g. early close, staff meeting)…" oninput="autoGrow(this)"></textarea>
+          <input type="file" id="day-note-photo" accept="image/*" multiple style="display:none" onchange="handleNotePhoto(event)">
+          <div id="note-photo-preview"></div>
+          <button class="photo-btn" type="button" onclick="document.getElementById('day-note-photo').click()">
+            <svg viewBox="0 0 24 24"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+            Add photo
+          </button>
+          <button class="add-btn" id="note-save-btn" onclick="saveDayNote(true)">Save note</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SHIFTS -->
+  <div class="panel" id="panel-shifts">
+    <div class="page-title">Shift types</div>
+    <div class="card">
+      <div class="card-label">New shift type</div>
+      <div class="form-grid">
+        <div class="f-field span2"><label>Name</label><input id="s-name" placeholder="e.g. Morning"></div>
+        <div class="f-field"><label>Start</label><input type="time" id="s-start" value="08:00"></div>
+        <div class="f-field"><label>End</label><input type="time" id="s-end" value="16:00"></div>
+        <div class="f-field"><label>Color</label><input type="color" id="s-color" value="#6366f1"></div>
+        <div class="f-field span2 off-check-row">
+          <label class="off-check-label">
+            <input type="checkbox" id="s-off" onchange="toggleOffFields()">
+            Off day (no time, doesn't count toward hours)
+          </label>
+        </div>
+      </div>
+      <button class="form-submit" onclick="addShift()">Add shift type</button>
+    </div>
+    <div class="items" id="shift-items"></div>
+  </div>
+
+  <!-- PROFILE -->
+  <div class="panel" id="panel-profile">
+    <div class="page-title">Profile</div>
+    <div class="card">
+      <div class="card-label">Your details</div>
+      <div class="form-grid">
+        <div class="f-field span2"><label>Name</label><input id="p-name" placeholder="e.g. Alex Smith"></div>
+        <div class="f-field span2"><label>Job / role</label><input id="p-job" placeholder="e.g. IT Technician"></div>
+        <div class="f-field"><label>Color</label><input type="color" id="p-color" value="#6366f1"></div>
+      </div>
+      <button class="form-submit" onclick="saveProfile()">Save changes</button>
+    </div>
+
+    <div class="card">
+      <div class="card-label">Backup & restore</div>
+      <p class="backup-hint">Save a copy of everything — shifts, assignments, notes, and photos — as a file you can keep or move to another device.</p>
+      <button class="export-btn" style="width:100%;justify-content:center;margin-bottom:10px" onclick="backupData()">
+        <svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+        Download backup
+      </button>
+      <input type="file" id="restore-file" accept="application/json" style="display:none" onchange="restoreData(event)">
+      <button class="export-btn" style="width:100%;justify-content:center;margin-bottom:0" onclick="document.getElementById('restore-file').click()">
+        <svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+        Restore from backup
+      </button>
+    </div>
+  </div>
+
+  <!-- SUMMARY -->
+  <div class="panel" id="panel-summary">
+    <div class="page-title">Summary</div>
+    <button class="export-btn" onclick="exportCSV()">
+      <svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+      Export to CSV
+    </button>
+    <div class="stats" id="stats"></div>
+    <div class="items" id="sum-items"></div>
+  </div>
+
+</div>
+
+<!-- BOTTOM NAV (mobile) -->
+<nav class="bottom-nav">
+  <button class="b-nav-btn active" onclick="go('cal')">
+    <svg class="ni" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+    <span class="b-nav-label">Calendar</span>
+  </button>
+  <button class="b-nav-btn" onclick="go('shifts')">
+    <svg class="ni" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+    <span class="b-nav-label">Shifts</span>
+  </button>
+  <button class="b-nav-btn" onclick="go('summary')">
+    <svg class="ni" viewBox="0 0 24 24"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+    <span class="b-nav-label">Summary</span>
+  </button>
+  <button class="b-nav-btn" onclick="go('profile')">
+    <svg class="ni" viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+    <span class="b-nav-label">Profile</span>
+  </button>
+</nav>
+
+<div class="toast" id="toast"></div>
+
+<!-- FIRST-RUN SETUP -->
+<div class="setup-overlay" id="setup-overlay" style="display:none">
+  <div class="setup-card">
+    <div class="logo-mark" style="margin:0 auto 14px;width:52px;height:52px">
+      <img src="/icon.png" alt="" width="52" height="52" style="border-radius:14px">
+    </div>
+    <h2>Welcome to Shifts</h2>
+    <p>Quick setup — this is just for you.</p>
+    <div class="form-grid" style="grid-template-columns:1fr;margin-top:16px">
+      <div class="f-field"><label>Your name</label><input id="setup-name" placeholder="e.g. Alex Smith"></div>
+      <div class="f-field"><label>Job / role</label><input id="setup-job" placeholder="e.g. IT Technician"></div>
+      <div class="f-field"><label>Color</label><input type="color" id="setup-color" value="#6366f1"></div>
+    </div>
+    <button class="form-submit" style="margin-top:16px" onclick="completeSetup()">Get started</button>
+  </div>
+</div>
+
+<!-- PHOTO LIGHTBOX -->
+<div class="photo-lightbox" id="photo-lightbox" style="display:none">
+  <div class="lightbox-topbar">
+    <button class="lb-btn" onclick="downloadCurrentPhoto()" title="Download photo">
+      <svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+    </button>
+    <button class="lb-btn lb-danger" onclick="deleteCurrentPhoto()" title="Delete photo">
+      <svg viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg>
+    </button>
+    <button class="lb-btn" onclick="closeLightbox()" title="Close">
+      <svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+    </button>
+  </div>
+  <div class="lightbox-body" onclick="closeLightbox()">
+    <img id="lightbox-img" src="" alt="" onclick="event.stopPropagation()">
+  </div>
+</div>
+</div>
+
+<script>
+const TABS=['cal','shifts','summary','profile'];
+const MN=['January','February','March','April','May','June','July','August','September','October','November','December'];
+const DN=['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+
+let D={user:null,shifts:[],assignments:[],dayNotes:{}};
+let cal=new Date(),sel='',panelOpen=false,lastJSON='',useServer=false;
+let dirty=false,saveTimer=null;
+let calView='month'; // 'month' or 'week'
+
+// ── HELPERS ──
+const fd=d=>`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+const ft=t=>{if(!t)return'';const[h,m]=t.split(':');const n=+h;return`${n%12||12}:${m}${n<12?'am':'pm'}`};
+const ch=(s,e)=>{if(!s||!e)return 0;const[sh,sm]=s.split(':').map(Number);const[eh,em]=e.split(':').map(Number);let x=(eh*60+em)-(sh*60+sm);if(x<0)x+=1440;return Math.round(x/6)/10};
+const esc=s=>String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+
+// Normalizes a day-note entry to {text,photos:[]}. Older data stored notes
+// as plain strings, or as {text,photo} with a single photo.
+function getNoteObj(ds){
+  const n=D.dayNotes&&D.dayNotes[ds];
+  if(!n)return null;
+  if(typeof n==='string')return{text:n,photos:[]};
+  const photos=n.photos?n.photos:(n.photo?[n.photo]:[]);
+  return{text:n.text||'',photos};
+}
+const MAX_PHOTOS_PER_DAY=8;
+
+function toast(msg){
+  const t=document.getElementById('toast');
+  t.textContent=msg;t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'),2200);
+}
+
+// ── SYNC STATUS ──
+function setSyncUI(state,label){
+  const pill=document.getElementById('sync-pill');
+  const txt=document.getElementById('sync-text');
+  if(!pill)return;
+  pill.className='sync-pill '+state;
+  if(txt)txt.textContent=label||{online:'Synced',syncing:'Saving…',offline:'Offline',local:'Local only'}[state]||'';
+}
+
+// ── DATA ──
+async function loadData(){
+  const rawLocal=localStorage.getItem('shifts_v3');
+  const wasDirty=localStorage.getItem('shifts_v3_dirty')==='1';
+  try{
+    const r=await fetch('/api/data',{signal:AbortSignal.timeout(3000)});
+    if(!r.ok)throw 0;
+    const server=await r.json();
+    useServer=true;
+    if(wasDirty&&rawLocal){
+      // A previous save never made it to the server — keep the local
+      // (newer) copy and push it now, instead of overwriting it with
+      // the server's stale data.
+      D=JSON.parse(rawLocal);
+      dirty=true;
+      setSyncUI('syncing');
+    }else{
+      D=server;
+      lastJSON=JSON.stringify(D);
+      setSyncUI('online');
+    }
+  }catch(e){
+    useServer=false;
+    if(rawLocal)D=JSON.parse(rawLocal);
+    setSyncUI('local','Local only');
+  }
+  if(!D.dayNotes)D.dayNotes={};
+  if(D.user===undefined)D.user=null;
+}
+
+function save(){
+  dirty=true;
+  localStorage.setItem('shifts_v3',JSON.stringify(D));
+  localStorage.setItem('shifts_v3_dirty','1');
+  if(useServer)doSync();
+}
+
+let saveVersion=0;
+function doSync(){
+  clearTimeout(saveTimer);
+  const myVersion=++saveVersion;
+  const json=JSON.stringify(D);
+  setSyncUI('syncing');
+  fetch('/api/data',{method:'PUT',headers:{'Content-Type':'application/json'},body:json,signal:AbortSignal.timeout(20000)})
+    .then(r=>{
+      if(!r.ok)throw 0;
+      if(myVersion!==saveVersion)return; // a newer save has since taken over
+      lastJSON=json;
+      dirty=false;
+      localStorage.removeItem('shifts_v3_dirty');
+      setSyncUI('online');
+    })
+    .catch(()=>{
+      if(myVersion!==saveVersion)return;
+      // Keep retrying in the background — don't drop the change.
+      // dirty stays true, so pollSync won't overwrite it with stale server data.
+      setSyncUI('offline');
+      saveTimer=setTimeout(doSync,3000);
+    });
+}
+
+async function pollSync(){
+  if(!useServer||dirty)return; // never pull from the server while we have unsynced local changes
+  try{
+    const r=await fetch('/api/data',{signal:AbortSignal.timeout(3000)});
+    if(!r.ok)throw 0;
+    const fresh=await r.json();
+    const j=JSON.stringify(fresh);
+    if(j!==lastJSON){
+      D=fresh;lastJSON=j;
+      const active=TABS.find(t=>document.getElementById('panel-'+t)?.classList.contains('active'))||'cal';
+      if(active==='cal'){
+        rCal();
+        if(panelOpen&&sel)refreshOpenPanel();
+      }else{
+        go(active);
+      }
+      toast('Schedule updated');
+    }
+    setSyncUI('online');
+  }catch(e){setSyncUI('offline')}
+}
+
+// Refresh the open day-panel's contents with newly-synced data,
+// without overwriting the note box if the user is actively typing in it.
+function refreshOpenPanel(){
+  const ok=D.shifts.length>0;
+  document.getElementById('sh-add').style.display=ok?'block':'none';
+  document.getElementById('sh-setup').style.display=ok?'none':'block';
+  if(ok){
+    document.getElementById('m-shift').innerHTML=D.shifts.map(s=>`<option value="${s.id}">${esc(s.name)}</option>`).join('');
+  }
+  renderAssignList();
+  const noteEl=document.getElementById('day-note');
+  const noteObj=getNoteObj(sel);
+  if(document.activeElement!==noteEl){
+    noteEl.value=(noteObj&&noteObj.text)||'';
+    autoGrow(noteEl);
+  }
+  renderNotePhoto(noteObj&&noteObj.photos);
+}
+
+// ── NAV ──
+function go(tab){
+  TABS.forEach((t,i)=>{
+    document.querySelectorAll('.d-nav-btn')[i]?.classList.toggle('active',t===tab);
+    document.querySelectorAll('.b-nav-btn')[i]?.classList.toggle('active',t===tab);
+    document.getElementById('panel-'+t)?.classList.toggle('active',t===tab);
+  });
+  if(tab!=='cal'&&panelOpen)closePanel();
+  if(tab==='cal')rCal();
+  if(tab==='shifts')rShifts();
+  if(tab==='profile')rProfile();
+  if(tab==='summary')rSummary();
+}
+
+// ── VIEW TOGGLE ──
+function setView(v){
+  calView=v;
+  document.getElementById('vt-month').classList.toggle('active',v==='month');
+  document.getElementById('vt-week').classList.toggle('active',v==='week');
+  document.getElementById('view-month').style.display=v==='month'?'':'none';
+  document.getElementById('view-week').style.display=v==='week'?'':'none';
+  rCal();
+}
+
+// ── CALENDAR ──
+function mv(d){
+  if(calView==='month'){
+    cal=new Date(cal.getFullYear(),cal.getMonth()+d,1);
+  }else{
+    cal=new Date(cal.getFullYear(),cal.getMonth(),cal.getDate()+d*7);
+  }
+  rCal();
+}
+function goToday(){
+  cal=new Date();
+  rCal();
+  if(panelOpen)openPanel(fd(new Date()));
+}
+
+// Get Mon-Sun week containing a date (Sun start)
+function getWeekDates(date){
+  const d=new Date(date);
+  const day=d.getDay();
+  const start=new Date(d);
+  start.setDate(d.getDate()-day);
+  const days=[];
+  for(let i=0;i<7;i++){const x=new Date(start);x.setDate(start.getDate()+i);days.push(x);}
+  return days;
+}
+
+function rCal(){
+  if(calView==='month') rMonthView();
+  else rWeekView();
+}
+
+function rMonthView(){
+  const y=cal.getFullYear(),m=cal.getMonth();
+  const yr=y===new Date().getFullYear()?'':` <span>${y}</span>`;
+  document.getElementById('cal-month').innerHTML=MN[m]+yr;
+  document.getElementById('dows').innerHTML=DN.map(d=>`<div class="dow">${d}</div>`).join('');
+
+  const first=new Date(y,m,1),last=new Date(y,m+1,0);
+  const today=fd(new Date());
+
+  let cells=[];
+  for(let i=0;i<first.getDay();i++)cells.push({d:new Date(y,m,1-first.getDay()+i),other:true});
+  for(let i=1;i<=last.getDate();i++)cells.push({d:new Date(y,m,i),other:false});
+  const tail=(7-(cells.length%7))%7;
+  for(let i=1;i<=tail;i++)cells.push({d:new Date(y,m+1,i),other:true});
+
+  document.getElementById('cal-grid').innerHTML=cells.map(({d,other})=>{
+    const ds=fd(d);
+    const isToday=ds===today;
+    const assigns=D.assignments.filter(a=>a.date===ds);
+
+    // Dots — solid shift colour, one per distinct shift assigned that day
+    const dotColors=[...new Map(assigns.map(a=>{
+      const sh=D.shifts.find(s=>s.id===a.shiftId);
+      if(!sh)return null;
+      return[sh.id,sh.color||'#888'];
+    }).filter(Boolean)).values()];
+    const maxDots=4;
+    const dotsHtml=dotColors.slice(0,maxDots).map(c=>
+      `<div class="cell-dot" style="background:${c}"></div>`).join('')
+      +(dotColors.length>maxDots?`<span class="cell-dot-more">+${dotColors.length-maxDots}</span>`:'');
+    const cellDotsHtml=assigns.length?`<div class="cell-dots">${dotsHtml}</div>`:'';
+
+    // Date number — recoloured with the user's colour once a shift is assigned
+    const dnStyle=assigns.length&&D.user&&D.user.color?` style="color:${D.user.color}"`:'';
+
+    // Pills (desktop) — shift name only, no employee
+    let pills=assigns.slice(0,2).map(a=>{
+      const sh=D.shifts.find(s=>s.id===a.shiftId);
+      return sh?`<div class="pill" style="background:${sh.color}">${esc(sh.name)}</div>`:'';
+    }).join('');
+    if(assigns.length>2)pills+=`<div class="pill-more">+${assigns.length-2} more</div>`;
+
+    const note=getNoteObj(ds);
+    const hasNote=!!(note&&(note.text||(note.photos&&note.photos.length)));
+    const noteBadge=hasNote?`<div class="cell-note"><svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg></div>`:'';
+    const click=!other?`onclick="openPanel('${ds}')"` :'';
+    return`<button class="cal-cell${other?' other':''}${isToday?' today':''}" data-date="${ds}" ${click}>
+      ${noteBadge}
+      <div class="dn"${dnStyle}>${d.getDate()}</div>
+      ${cellDotsHtml}
+      <div class="pills">${pills}</div>
+    </button>`;
+  }).join('');
+}
+
+function rWeekView(){
+  const weekDays=getWeekDates(cal);
+  const today=fd(new Date());
+
+  // Header label: show range
+  const start=weekDays[0],end=weekDays[6];
+  const sameMonth=start.getMonth()===end.getMonth();
+  const yr=start.getFullYear()===new Date().getFullYear()?'':` <span>${start.getFullYear()}</span>`;
+  const label=sameMonth
+    ?`${MN[start.getMonth()]} ${start.getDate()}–${end.getDate()}${yr}`
+    :`${MN[start.getMonth()].slice(0,3)} ${start.getDate()} – ${MN[end.getMonth()].slice(0,3)} ${end.getDate()}${yr}`;
+  document.getElementById('cal-month').innerHTML=label;
+
+  // Week day headers
+  document.getElementById('week-head').innerHTML=weekDays.map(d=>{
+    const ds=fd(d);
+    const isToday=ds===today;
+    return`<div class="week-day-head" data-date="${ds}" onclick="openPanel('${ds}')">
+      <div class="wdh-name">${DN[d.getDay()]}</div>
+      <div class="wdh-num${isToday?' today':''}">${d.getDate()}</div>
+    </div>`;
+  }).join('');
+
+  // Collect all assignments for the week
+  const wkDates=weekDays.map(d=>fd(d));
+  const allAssigns=D.assignments.filter(a=>wkDates.includes(a.date));
+
+  if(!allAssigns.length){
+    document.getElementById('week-body').innerHTML='<div class="week-empty">No shifts this week. Tap a day to add one.</div>';
+    return;
+  }
+
+  // Build columns per day
+  const cols=weekDays.map(d=>{
+    const ds=fd(d);
+    const dayAssigns=D.assignments.filter(a=>a.date===ds);
+    const colContent=dayAssigns.map(a=>{
+      const sh=D.shifts.find(s=>s.id===a.shiftId);
+      if(!sh)return'';
+      const timeStr=sh.off?'Off day':`${ft(sh.start)}–${ft(sh.end)}`;
+      return`<div class="week-pill" style="background:${sh.color}" onclick="openPanel('${ds}')" title="${esc(sh.name)} ${timeStr}">${esc(sh.name)}</div>`;
+    }).join('');
+    return`<div class="week-col">${colContent||''}</div>`;
+  }).join('');
+
+  document.getElementById('week-body').innerHTML=`<div class="week-row">${cols}</div>`;
+}
+
+// ── INLINE DAY PANEL ──
+function openPanel(ds){
+  sel=ds;panelOpen=true;
+  const d=new Date(ds+'T00:00:00');
+  document.getElementById('sh-day').textContent=`${DN[d.getDay()]}, ${MN[d.getMonth()]} ${d.getDate()}`;
+
+  // Mark this date as selected on the calendar
+  document.querySelectorAll('.sel').forEach(el=>el.classList.remove('sel'));
+  document.querySelectorAll(`[data-date="${ds}"]`).forEach(el=>el.classList.add('sel'));
+
+  const noteObj=getNoteObj(ds);
+  const noteEl=document.getElementById('day-note');
+  noteEl.value=(noteObj&&noteObj.text)||'';
+  autoGrow(noteEl);
+  renderNotePhoto(noteObj&&noteObj.photos);
+  const ok=D.shifts.length>0;
+  document.getElementById('sh-add').style.display=ok?'block':'none';
+  document.getElementById('sh-setup').style.display=ok?'none':'block';
+  if(ok){
+    document.getElementById('m-shift').innerHTML=D.shifts.map(s=>`<option value="${s.id}">${esc(s.name)}</option>`).join('');
+  }
+  renderAssignList();
+  document.getElementById('inline-panel').classList.add('open');
+}
+function autoGrow(el){el.style.height='auto';el.style.height=el.scrollHeight+'px'}
+function renderNotePhoto(photos){
+  const wrap=document.getElementById('note-photo-preview');
+  photos=photos||[];
+  wrap.innerHTML=photos.length?`<div class="note-photos">${photos.map((p,i)=>
+    `<div class="note-photo" onclick="openPhotoLightbox(${i})"><img src="${p}"></div>`
+  ).join('')}</div>`:'';
+}
+function resizeImage(file){
+  return new Promise((resolve,reject)=>{
+    const reader=new FileReader();
+    reader.onerror=()=>reject(new Error('read'));
+    reader.onload=e=>{
+      const img=new Image();
+      img.onerror=()=>reject(new Error('decode'));
+      img.onload=()=>{
+        const maxW=900;
+        const scale=Math.min(1,maxW/img.width);
+        const w=Math.round(img.width*scale),h=Math.round(img.height*scale);
+        const canvas=document.createElement('canvas');
+        canvas.width=w;canvas.height=h;
+        canvas.getContext('2d').drawImage(img,0,0,w,h);
+        resolve(canvas.toDataURL('image/jpeg',0.72));
+      };
+      img.src=e.target.result;
+    };
+    reader.readAsDataURL(file);
+  });
+}
+// Best-effort extra copy of a photo saved as a real file in data/photos/ on
+// the server. This is purely a convenience backup — the app's own storage
+// (embedded in data.json) is unaffected if this fails or there's no server.
+function savePhotoFileCopy(date,dataUrl){
+  fetch('/api/photos',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({date,dataUrl})}).catch(()=>{});
+}
+async function handleNotePhoto(ev){
+  const files=Array.from(ev.target.files||[]);
+  if(!files.length)return;
+  if(!sel){toast('Open a day first');ev.target.value='';return}
+  const existing=getNoteObj(sel);
+  let photos=(existing&&existing.photos)||[];
+  const room=MAX_PHOTOS_PER_DAY-photos.length;
+  if(room<=0){toast(`Max ${MAX_PHOTOS_PER_DAY} photos per day`);ev.target.value='';return}
+  const toProcess=files.slice(0,room);
+  if(files.length>room)toast(`Only added ${room} — max ${MAX_PHOTOS_PER_DAY} photos per day`);
+  let addedAny=false;
+  for(const file of toProcess){
+    try{
+      const dataUrl=await resizeImage(file);
+      photos=[...photos,dataUrl];
+      addedAny=true;
+      savePhotoFileCopy(sel,dataUrl); // extra copy on disk in data/photos/ — best effort, doesn't block saving
+    }catch(err){
+      toast('One photo could not be processed — try a JPEG or PNG');
+    }
+  }
+  if(addedAny){
+    if(!D.dayNotes)D.dayNotes={};
+    D.dayNotes[sel]={text:(existing&&existing.text)||'',photos};
+    save();rCal();
+    renderNotePhoto(photos);
+    toast(toProcess.length>1?'Photos added':'Photo added');
+  }
+  ev.target.value='';
+}
+function removeNotePhoto(idx){
+  if(!sel)return;
+  const existing=getNoteObj(sel);
+  const text=(existing&&existing.text)||'';
+  const photos=((existing&&existing.photos)||[]).filter((_,i)=>i!==idx);
+  if(!D.dayNotes)D.dayNotes={};
+  if(text||photos.length)D.dayNotes[sel]={text,photos};
+  else delete D.dayNotes[sel];
+  save();rCal();
+  renderNotePhoto(photos);
+  toast('Photo removed');
+}
+
+// ── PHOTO LIGHTBOX ──
+let lightboxIndex=-1;
+function openPhotoLightbox(idx){
+  const noteObj=getNoteObj(sel);
+  const photos=(noteObj&&noteObj.photos)||[];
+  if(!photos[idx])return;
+  lightboxIndex=idx;
+  document.getElementById('lightbox-img').src=photos[idx];
+  document.getElementById('photo-lightbox').style.display='flex';
+}
+function closeLightbox(){
+  document.getElementById('photo-lightbox').style.display='none';
+  document.getElementById('lightbox-img').src='';
+  lightboxIndex=-1;
+}
+function downloadCurrentPhoto(){
+  if(lightboxIndex<0)return;
+  const noteObj=getNoteObj(sel);
+  const photos=(noteObj&&noteObj.photos)||[];
+  const src=photos[lightboxIndex];
+  if(!src)return;
+  const a=document.createElement('a');
+  a.href=src;
+  a.download=`shift-photo-${sel}-${lightboxIndex+1}.jpg`;
+  document.body.appendChild(a);a.click();document.body.removeChild(a);
+  toast('Photo downloaded');
+}
+function deleteCurrentPhoto(){
+  if(lightboxIndex<0)return;
+  if(!confirm('Delete this photo?'))return;
+  const idx=lightboxIndex;
+  closeLightbox();
+  removeNotePhoto(idx);
+}
+
+function saveDayNote(showToast){
+  if(!sel)return;
+  const val=document.getElementById('day-note').value.trim();
+  if(!D.dayNotes)D.dayNotes={};
+  const existing=getNoteObj(sel);
+  const photos=(existing&&existing.photos)||[];
+  if(val||photos.length)D.dayNotes[sel]={text:val,photos};
+  else delete D.dayNotes[sel];
+  save();rCal();
+  if(showToast)toast('Note saved');
+}
+function renderAssignList(){
+  const assigns=D.assignments.filter(a=>a.date===sel);
+  document.getElementById('sh-list').innerHTML=assigns.length
+    ?assigns.map(a=>{
+        const sh=D.shifts.find(s=>s.id===a.shiftId);
+        if(!sh)return'';
+        const noteHtml=a.note?`<div class="a-note">${esc(a.note)}</div>`:'';
+        return`<div class="a-row">
+          <div class="a-dot" style="background:${sh.color}"></div>
+          <div class="a-info"><div class="a-name">${esc(sh.name)}</div><div class="a-meta">${sh.off?'Off day':`${ft(sh.start)} – ${ft(sh.end)}`}</div>${noteHtml}</div>
+          <button class="note-btn${a.note?' has-note':''}" onclick="editANote(${a.id})" title="${a.note?'Edit note':'Add note'}">
+            <svg viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.1 2.1 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+          </button>
+          <button class="rm-btn" onclick="rmA(${a.id})">✕</button>
+        </div>`;
+      }).join('')
+    :'<div class="no-shifts">Nothing assigned yet.</div>';
+}
+function editANote(id){
+  const a=D.assignments.find(x=>x.id===id);
+  if(!a)return;
+  const val=prompt('Note for this shift:',a.note||'');
+  if(val===null)return;
+  const trimmed=val.trim();
+  if(trimmed)a.note=trimmed;else delete a.note;
+  save();renderAssignList();
+}
+function rmA(id){D.assignments=D.assignments.filter(a=>a.id!==id);save();renderAssignList();rCal()}
+function saveM(){
+  const sId=+document.getElementById('m-shift').value;
+  if(!sId)return;
+  if(!D.assignments.find(a=>a.shiftId===sId&&a.date===sel))
+    D.assignments.push({id:Date.now(),shiftId:sId,date:sel});
+  save();renderAssignList();rCal();
+}
+function closePanel(){
+  panelOpen=false;
+  document.getElementById('inline-panel').classList.remove('open');
+  document.querySelectorAll('.sel').forEach(el=>el.classList.remove('sel'));
+}
+
+// ── SHIFTS ──
+function toggleOffFields(){
+  const off=document.getElementById('s-off').checked;
+  document.getElementById('s-start').disabled=off;
+  document.getElementById('s-end').disabled=off;
+}
+function addShift(){
+  const n=document.getElementById('s-name').value.trim();
+  if(!n){toast('Enter a name');return}
+  const off=document.getElementById('s-off').checked;
+  D.shifts.push({id:Date.now(),name:n,start:off?'':document.getElementById('s-start').value,end:off?'':document.getElementById('s-end').value,color:document.getElementById('s-color').value,off});
+  save();rShifts();
+  document.getElementById('s-name').value='';
+  document.getElementById('s-off').checked=false;
+  toggleOffFields();
+  toast('Shift type added');
+}
+function delShift(id){
+  if(!confirm('Delete this shift type? Assignments using it will also be removed.'))return;
+  D.shifts=D.shifts.filter(s=>s.id!==id);
+  D.assignments=D.assignments.filter(a=>a.shiftId!==id);
+  save();rShifts();toast('Shift deleted');
+}
+function rShifts(){
+  document.getElementById('shift-items').innerHTML=D.shifts.length
+    ?D.shifts.map(s=>`<div class="item">
+        <div class="i-dot" style="background:${s.color}"></div>
+        <div class="i-info"><div class="i-name">${esc(s.name)}${s.off?' <span class="off-badge">OFF DAY</span>':''}</div><div class="i-meta">${s.off?'No hours':`${ft(s.start)} – ${ft(s.end)} · ${ch(s.start,s.end)}h`}</div></div>
+        <button class="del" onclick="delShift(${s.id})">Delete</button>
+      </div>`).join('')
+    :'<div class="empty-state">No shift types yet.<br>Add one above to get started.</div>';
+}
+
+// ── PROFILE ──
+function rProfile(){
+  document.getElementById('p-name').value=(D.user&&D.user.name)||'';
+  document.getElementById('p-job').value=(D.user&&D.user.job)||'';
+  document.getElementById('p-color').value=(D.user&&D.user.color)||'#6366f1';
+}
+function saveProfile(){
+  const name=document.getElementById('p-name').value.trim();
+  if(!name){toast('Enter your name');return}
+  D.user={name,job:document.getElementById('p-job').value.trim(),color:document.getElementById('p-color').value};
+  save();rCal();toast('Profile updated');
+}
+
+// ── BACKUP & RESTORE ──
+function backupData(){
+  const payload={type:'shifts-backup',version:1,exportedAt:new Date().toISOString(),data:D};
+  const blob=new Blob([JSON.stringify(payload,null,2)],{type:'application/json'});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a');
+  a.href=url;a.download=`shifts-backup-${fd(new Date())}.json`;
+  document.body.appendChild(a);a.click();
+  document.body.removeChild(a);URL.revokeObjectURL(url);
+  toast('Backup downloaded');
+}
+function restoreData(ev){
+  const file=ev.target.files[0];
+  if(!file)return;
+  const reader=new FileReader();
+  reader.onload=e=>{
+    let parsed;
+    try{parsed=JSON.parse(e.target.result);}catch(err){toast('That file isn\'t valid JSON');ev.target.value='';return}
+    const incoming=(parsed&&parsed.data&&parsed.type==='shifts-backup')?parsed.data:parsed;
+    if(!incoming||typeof incoming!=='object'||!Array.isArray(incoming.shifts)){
+      toast('That doesn\'t look like a Shifts backup file');ev.target.value='';return;
+    }
+    if(!confirm('Restoring will replace everything currently in the app — shifts, assignments, notes, and your profile. Continue?')){
+      ev.target.value='';return;
+    }
+    D={user:incoming.user||null,shifts:incoming.shifts||[],assignments:incoming.assignments||[],dayNotes:incoming.dayNotes||{}};
+    save();
+    ev.target.value='';
+    if(!D.user){
+      document.getElementById('setup-overlay').style.display='flex';
+    }else{
+      go('cal');
+    }
+    toast('Backup restored');
+  };
+  reader.readAsText(file);
+}
+
+// ── SUMMARY ──
+function rSummary(){
+  const stats=D.shifts.map(sh=>{
+    const a=D.assignments.filter(x=>x.shiftId===sh.id);
+    const h=a.length*ch(sh.start,sh.end);
+    return{...sh,count:a.length,hours:Math.round(h*10)/10};
+  });
+  const th=Math.round(stats.reduce((s,e)=>s+e.hours,0)*10)/10;
+  document.getElementById('stats').innerHTML=`
+    <div class="stat"><div class="sv">${D.shifts.length}</div><div class="sl">Shift types</div></div>
+    <div class="stat"><div class="sv">${D.assignments.length}</div><div class="sl">Shifts logged</div></div>
+    <div class="stat"><div class="sv">${th}h</div><div class="sl">Total hours</div></div>`;
+  document.getElementById('sum-items').innerHTML=stats.length
+    ?stats.map(e=>`<div class="item">
+        <div class="i-dot" style="background:${e.color}"></div>
+        <div class="i-info"><div class="i-name">${esc(e.name)}${e.off?' <span class="off-badge">OFF DAY</span>':''}</div><div class="i-meta">${e.off?'No hours':`${ft(e.start)} – ${ft(e.end)}`}</div></div>
+        <span style="font-size:11px;font-weight:700;padding:3px 10px;border-radius:20px;background:${e.color}22;color:${e.color};border:1px solid ${e.color}44">${e.count}×</span>
+        <span style="font-size:13px;color:var(--text2);font-weight:600;min-width:36px;text-align:right">${e.hours}h</span>
+      </div>`).join('')
+    :'<div class="empty-state">No data yet.</div>';
+}
+
+// ── CSV EXPORT ──
+function exportCSV(){
+  if(!D.assignments.length){toast('No assignments to export');return}
+  const rows=[['Date','Shift','Start','End','Hours','Note']];
+  D.assignments.forEach(a=>{
+    const sh=D.shifts.find(s=>s.id===a.shiftId);
+    if(!sh)return;
+    rows.push([a.date,sh.name,sh.start,sh.end,ch(sh.start,sh.end),a.note||'']);
+  });
+  const csv=rows.map(r=>r.map(v=>`"${String(v).replace(/"/g,'""')}"`).join(',')).join('\n');
+  const blob=new Blob([csv],{type:'text/csv'});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a');
+  a.href=url;a.download=`shifts-${fd(new Date())}.csv`;
+  document.body.appendChild(a);a.click();
+  document.body.removeChild(a);URL.revokeObjectURL(url);
+  toast('CSV exported!');
+}
+
+// ── FIRST-RUN SETUP ──
+function completeSetup(){
+  const name=document.getElementById('setup-name').value.trim();
+  if(!name){toast('Enter your name');return}
+  const job=document.getElementById('setup-job').value.trim();
+  const color=document.getElementById('setup-color').value;
+  D.user={name,job,color};
+  save();
+  document.getElementById('setup-overlay').style.display='none';
+  bootApp();
+}
+
+function bootApp(){
+  rCal();
+  setInterval(pollSync,4000);
+  document.addEventListener('visibilitychange',()=>{if(!document.hidden)pollSync();});
+  window.addEventListener('focus',pollSync);
+}
+
+// ── BOOT ──
+(async function(){
+  setSyncUI('syncing','Connecting…');
+  await loadData();
+  if(!D.user){
+    setSyncUI('online');
+    document.getElementById('setup-overlay').style.display='flex';
+  }else{
+    bootApp();
+  }
+})();
+</script>
+</body>
+</html>
