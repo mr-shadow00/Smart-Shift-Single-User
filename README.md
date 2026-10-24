@@ -18,3 +18,7 @@ it tracking your and others work flow
 4. enjoy
 
 # Shadow out
+
+## Offline use
+
+Fonts are bundled locally (public/fonts), and the compose installs packages only if node_modules is missing, so restarts work with no internet.
