@@ -9,4 +9,7 @@ services:
     volumes:
       - /DATA/AppData/smart-shift:/app
       - /DATA/AppData/smart-shift/data:/app/data
+    environment:
+      # Optional: fix the login password here. Leave empty to create it on first visit in the app.
+      - APP_PASSWORD=
     command: ["sh", "-c", "[ -d node_modules ] || npm install --omit=dev --no-audit --no-fund; node server.js"]

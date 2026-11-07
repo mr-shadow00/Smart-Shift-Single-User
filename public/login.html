@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Shifts &middot; Sign in</title>
+<link rel="manifest" href="/manifest.webmanifest">
+<link rel="icon" type="image/png" href="/icon.png">
+<link rel="apple-touch-icon" href="/icon-192.png">
+<meta name="theme-color" content="#6366f1">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<style>
+@import url('fonts.css');
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
+:root{--bg:#f0f2f7;--surface2:#f0f2f5;--text:#0f1117;--text2:#4a5568;--text3:#8896a7;--accent:#6366f1;--red:#ef4444;--red-bg:#fef2f2;--border:#e2e5ec;--glass:rgba(255,255,255,.65);--glass-border:rgba(255,255,255,.7);--shadow:0 8px 32px rgba(31,41,82,.12);--mesh1:rgba(99,102,241,.22);--mesh2:rgba(244,114,182,.16);--mesh3:rgba(16,185,129,.14)}
+@media(prefers-color-scheme:dark){:root{--bg:#0e1118;--surface2:#222838;--text:#f1f3f9;--text2:#aab2c5;--text3:#6f7a90;--red-bg:rgba(239,68,68,.12);--border:#2d3548;--glass:rgba(30,35,52,.6);--glass-border:rgba(255,255,255,.08);--shadow:0 8px 32px rgba(0,0,0,.4)}}
+body{font-family:-apple-system,BlinkMacSystemFont,'Inter',system-ui,sans-serif;font-size:14px;color:var(--text);min-height:100vh;min-height:100dvh;display:flex;align-items:center;justify-content:center;padding:20px;-webkit-font-smoothing:antialiased;
+  background:radial-gradient(circle at 10% -10%,var(--mesh1),transparent 42%),radial-gradient(circle at 100% 0%,var(--mesh2),transparent 45%),radial-gradient(circle at 50% 100%,var(--mesh3),transparent 40%),var(--bg);background-attachment:fixed}
+.card{width:100%;max-width:360px;background:var(--glass);backdrop-filter:blur(18px) saturate(160%);-webkit-backdrop-filter:blur(18px) saturate(160%);border:1px solid var(--glass-border);border-radius:22px;box-shadow:var(--shadow);padding:28px 24px}
+.brand{display:flex;align-items:center;gap:12px;margin-bottom:22px}
+.brand img{width:44px;height:44px;border-radius:12px}
+.brand h1{font-size:22px;font-weight:800;letter-spacing:-.5px;line-height:1.1}
+.brand p{font-size:12.5px;color:var(--text2);margin-top:2px}
+.field{display:flex;flex-direction:column;gap:6px;margin-bottom:14px}
+.field label{font-size:10.5px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.5px}
+input{width:100%;min-width:0;padding:12px 14px;border:1px solid var(--border);border-radius:14px;font-size:16px;background:var(--surface2);color:var(--text);outline:none;font-family:inherit;transition:border-color .15s}
+input:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(99,102,241,.12)}
+button{width:100%;padding:13px;border:none;border-radius:999px;background:var(--accent);color:#fff;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit;margin-top:4px;box-shadow:0 4px 14px -4px rgba(99,102,241,.5)}
+button:disabled{opacity:.6}
+.err{color:var(--red);background:var(--red-bg);border-radius:12px;padding:9px 12px;font-size:12.5px;margin-bottom:14px}
+[hidden]{display:none !important}
+</style>
+</head>
+<body>
+<form id="form" class="card">
+  <div class="brand">
+    <img src="/icon-192.png" alt="">
+    <div><h1>Shifts</h1><p id="sub">Sign in to continue</p></div>
+  </div>
+  <div class="field">
+    <label for="pw" id="pwLabel">Password</label>
+    <input id="pw" type="password" autocomplete="current-password" autofocus required>
+  </div>
+  <div class="field" id="pw2Row" hidden>
+    <label for="pw2">Confirm password</label>
+    <input id="pw2" type="password" autocomplete="new-password">
+  </div>
+  <p class="err" id="err" hidden></p>
+  <button id="btn" type="submit">Sign in</button>
+</form>
+<script>
+(async()=>{
+  const $=id=>document.getElementById(id);
+  let setup=false;
+  try{
+    const st=await (await fetch('/api/auth/status')).json();
+    if(st.authed){location.href='/';return}
+    setup=!st.configured;
+  }catch(e){}
+  if(setup){
+    $('sub').textContent='First run: create a password';
+    $('pwLabel').textContent='New password (min 6 characters)';
+    $('pw').autocomplete='new-password';
+    $('pw2Row').hidden=false;
+    $('pw2').required=true;
+    $('btn').textContent='Create password';
+  }
+  $('form').addEventListener('submit',async e=>{
+    e.preventDefault();
+    const err=$('err');err.hidden=true;
+    if(setup&&$('pw').value!==$('pw2').value){err.textContent='Passwords do not match';err.hidden=false;return}
+    $('btn').disabled=true;
+    try{
+      const r=await fetch(setup?'/api/auth/setup':'/api/auth/login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({password:$('pw').value})});
+      const d=await r.json();
+      if(!r.ok)throw new Error(d.error||'Failed');
+      location.href='/';
+    }catch(ex){err.textContent=ex.message;err.hidden=false;$('btn').disabled=false}
+  });
+})();
+</script>
+</body>
+</html>

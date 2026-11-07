@@ -1,5 +1,6 @@
 const express = require('express');
 const fs = require('fs');
+const crypto = require('crypto');
 const path = require('path');
 
 const app = express();
@@ -10,6 +11,9 @@ const INDEX_FILE = path.join(DATA_DIR, 'index.json');
 const WEEKS_DIR = path.join(DATA_DIR, 'weeks');
 const PHOTOS_DIR = path.join(DATA_DIR, 'photos');
 const BACKUPS_DIR = path.join(DATA_DIR, 'backups');
+const AUTH_FILE = path.join(DATA_DIR, 'auth.json');
+const APP_PASSWORD = process.env.APP_PASSWORD || ''; // optional: fix the password via env instead of the web UI
+const SESSION_DAYS = 30;
 const LEGACY_DATA_FILE = path.join(DATA_DIR, 'data.json'); // old single-file format
 
 // Auto-backup: how many rotating backups to keep on disk at once. Oldest is
@@ -234,6 +238,126 @@ function makeRateLimiter({ windowMs, max }) {
 
 const generalLimiter = makeRateLimiter({ windowMs: 5 * 60 * 1000, max: 300 }); // 300 req / 5 min
 const photoLimiter = makeRateLimiter({ windowMs: 5 * 60 * 1000, max: 30 });    // 30 uploads / 5 min
+
+// ── login ──
+// Password is created on first visit (or fixed via APP_PASSWORD). Stored as a
+// scrypt hash in data/auth.json. Login = signed HttpOnly cookie, 30 days.
+function readAuth() { return readJSON(AUTH_FILE, {}); }
+function writeAuth(a) { writeJSONAtomic(AUTH_FILE, a); }
+function sessionSecret() {
+  const a = readAuth();
+  if (!a.sessionSecret) { a.sessionSecret = crypto.randomBytes(32).toString('hex'); writeAuth(a); }
+  return a.sessionSecret;
+}
+function hashPassword(pw) {
+  const salt = crypto.randomBytes(16).toString('hex');
+  return salt + ':' + crypto.scryptSync(pw, salt, 64).toString('hex');
+}
+function safeEqual(a, b) {
+  const ha = crypto.createHash('sha256').update(String(a)).digest();
+  const hb = crypto.createHash('sha256').update(String(b)).digest();
+  return crypto.timingSafeEqual(ha, hb);
+}
+function passwordConfigured() { return !!APP_PASSWORD || !!readAuth().passwordHash; }
+function verifyPassword(pw) {
+  if (APP_PASSWORD) return safeEqual(pw, APP_PASSWORD);
+  const a = readAuth();
+  if (!a.passwordHash) return false;
+  const [salt, hash] = a.passwordHash.split(':');
+  const test = crypto.scryptSync(pw, salt, 64);
+  const real = Buffer.from(hash, 'hex');
+  return real.length === test.length && crypto.timingSafeEqual(real, test);
+}
+function signSession() {
+  const exp = Date.now() + SESSION_DAYS * 86400000;
+  const sig = crypto.createHmac('sha256', sessionSecret()).update(String(exp)).digest('hex');
+  return exp + '.' + sig;
+}
+function parseCookies(req) {
+  const out = {};
+  String(req.headers.cookie || '').split(';').forEach((part) => {
+    const i = part.indexOf('=');
+    if (i > -1) out[part.slice(0, i).trim()] = decodeURIComponent(part.slice(i + 1).trim());
+  });
+  return out;
+}
+function hasSession(req) {
+  const t = parseCookies(req).shifts_session;
+  if (!t) return false;
+  const [exp, sig] = t.split('.');
+  if (!exp || !sig || Number(exp) < Date.now()) return false;
+  const expected = crypto.createHmac('sha256', sessionSecret()).update(exp).digest('hex');
+  return safeEqual(sig, expected);
+}
+function setSessionCookie(res) {
+  res.setHeader('Set-Cookie', 'shifts_session=' + signSession() + '; Path=/; HttpOnly; SameSite=Lax; Max-Age=' + SESSION_DAYS * 86400);
+}
+function clearSessionCookie(res) {
+  res.setHeader('Set-Cookie', 'shifts_session=; Path=/; HttpOnly; SameSite=Lax; Max-Age=0');
+}
+
+// 10 failed logins per 15 minutes per IP
+const failedLogins = new Map();
+function loginBlocked(ip) {
+  const r = failedLogins.get(ip);
+  if (!r) return false;
+  if (Date.now() - r.first > 15 * 60000) { failedLogins.delete(ip); return false; }
+  return r.count >= 10;
+}
+function noteFailedLogin(ip) {
+  const r = failedLogins.get(ip);
+  if (!r || Date.now() - r.first > 15 * 60000) failedLogins.set(ip, { count: 1, first: Date.now() });
+  else r.count++;
+}
+
+app.get('/api/auth/status', (req, res) => {
+  res.json({ configured: passwordConfigured(), authed: hasSession(req), passwordFromEnv: !!APP_PASSWORD });
+});
+app.post('/api/auth/setup', (req, res) => {
+  if (passwordConfigured()) return res.status(400).json({ error: 'Password is already set' });
+  const pw = String((req.body && req.body.password) || '');
+  if (pw.length < 6) return res.status(400).json({ error: 'Password must be at least 6 characters' });
+  const a = readAuth();
+  a.passwordHash = hashPassword(pw);
+  writeAuth(a);
+  setSessionCookie(res);
+  res.json({ ok: true });
+});
+app.post('/api/auth/login', (req, res) => {
+  const ip = req.ip || 'unknown';
+  if (loginBlocked(ip)) return res.status(429).json({ error: 'Too many attempts. Try again in 15 minutes.' });
+  const pw = String((req.body && req.body.password) || '');
+  if (!passwordConfigured() || !verifyPassword(pw)) {
+    noteFailedLogin(ip);
+    return res.status(401).json({ error: 'Wrong password' });
+  }
+  failedLogins.delete(ip);
+  setSessionCookie(res);
+  res.json({ ok: true });
+});
+app.post('/api/auth/logout', (req, res) => { clearSessionCookie(res); res.json({ ok: true }); });
+app.post('/api/auth/password', (req, res) => {
+  if (!hasSession(req)) return res.status(401).json({ error: 'Not logged in' });
+  if (APP_PASSWORD) return res.status(400).json({ error: 'Password is set by the APP_PASSWORD environment variable' });
+  const { currentPassword, newPassword } = req.body || {};
+  if (!verifyPassword(String(currentPassword || ''))) return res.status(401).json({ error: 'Current password is wrong' });
+  if (String(newPassword || '').length < 6) return res.status(400).json({ error: 'New password must be at least 6 characters' });
+  const a = readAuth();
+  a.passwordHash = hashPassword(String(newPassword));
+  a.sessionSecret = crypto.randomBytes(32).toString('hex'); // logs out every other device
+  writeAuth(a);
+  setSessionCookie(res);
+  res.json({ ok: true });
+});
+
+// Gate: everything else needs a login. Pages redirect to the login page, API returns 401.
+const PUBLIC_FILES = ['/login.html', '/fonts.css', '/manifest.webmanifest', '/sw.js', '/icon.png', '/icon-192.png', '/icon-512.png', '/icon-maskable-512.png'];
+app.use((req, res, next) => {
+  if (hasSession(req)) return next();
+  if (PUBLIC_FILES.includes(req.path) || req.path.startsWith('/fonts/')) return next();
+  if (req.path.startsWith('/api/')) return res.status(401).json({ error: 'Not logged in' });
+  return res.redirect('/login.html');
+});
 
 app.use('/api', (req, res, next) => { res.set('Cache-Control', 'no-store'); next(); });
 app.use('/api', generalLimiter);

@@ -17,6 +17,14 @@ it tracking your and others work flow
 
 4. enjoy
 
+## Login
+
+The app is protected by a password. The first time you open it, it asks you to create one.
+Change it any time in Profile -> Security, and log out from there too. Logins last 30 days.
+The password is stored as a hash in data/auth.json. Forgot it? Stop the app, delete data/auth.json, start again, and create a new one.
+
+Optional: set APP_PASSWORD in the compose file to fix the password there instead (then it can't be changed in the app).
+
 # Shadow out
 
 ## Offline use
