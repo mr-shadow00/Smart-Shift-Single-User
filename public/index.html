@@ -1841,7 +1841,7 @@ async function rSummary(){
   document.getElementById('sum-empty').style.display='none';
   let all;
   try{
-    const r=await fetch('/api/all',{signal:AbortSignal.timeout(20000),cache:'no-store'});
+    const r=await fetch('/api/summary',{signal:AbortSignal.timeout(20000),cache:'no-store'});
     if(!r.ok)throw 0;
     all=await r.json();
   }catch(e){
@@ -1851,16 +1851,17 @@ async function rSummary(){
     empty.style.display='block';
     return;
   }
-  const assignments=all.assignments||[];
+  const counts=all.counts||{};
+  const totalLogged=all.total||0;
   const stats=meta.shifts.map(sh=>{
-    const a=assignments.filter(x=>x.shiftId===sh.id);
-    const h=a.length*ch(sh.start,sh.end);
-    return{...sh,count:a.length,hours:Math.round(h*10)/10};
+    const n=counts[sh.id]||0;
+    const h=n*ch(sh.start,sh.end);
+    return{...sh,count:n,hours:Math.round(h*10)/10};
   });
   const th=Math.round(stats.reduce((s,e)=>s+e.hours,0)*10)/10;
   document.getElementById('stats').innerHTML=`
     <div class="stat"><div class="sv">${meta.shifts.length}</div><div class="sl">Shift types</div></div>
-    <div class="stat"><div class="sv">${assignments.length}</div><div class="sl">Shifts logged</div></div>
+    <div class="stat"><div class="sv">${totalLogged}</div><div class="sl">Shifts logged</div></div>
     <div class="stat"><div class="sv">${th}h</div><div class="sl">Total hours</div></div>`;
 
   const entries=stats.filter(e=>e.hours>0).sort((a,b)=>b.hours-a.hours);

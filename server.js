@@ -415,6 +415,26 @@ app.get('/api/all', (req, res) => {
   }
 });
 
+// ── summary totals — tiny reply for the Summary tab: how many times each shift
+// was used, plus the grand total. The phone no longer downloads all history. ──
+app.get('/api/summary', (req, res) => {
+  try {
+    const counts = {};
+    let total = 0;
+    fs.readdirSync(WEEKS_DIR).filter(f => f.endsWith('.json')).forEach(f => {
+      const wd = readJSON(path.join(WEEKS_DIR, f), { assignments: [] });
+      (wd.assignments || []).forEach(a => {
+        counts[a.shiftId] = (counts[a.shiftId] || 0) + 1;
+        total++;
+      });
+    });
+    res.json({ counts, total });
+  } catch (e) {
+    console.error('Failed to build summary:', e);
+    res.status(500).json({ error: 'Failed to build summary' });
+  }
+});
+
 // ── full self-contained backup — same as /api/all, but embeds every photo
 // file's contents too, so restoring this one file brings everything back:
 // shifts, assignments, notes, and the actual pictures. ──
